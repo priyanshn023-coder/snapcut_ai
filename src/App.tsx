@@ -124,7 +124,7 @@ function App() {
     <div className={`${darkMode ? 'dark' : ''} min-h-screen bg-[#f8faff] text-[#101a3a]`}>
       <Navbar page={page} navigate={navigate} navigateToSection={navigateToSection} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
       {page === 'workspace' ? <Workspace navigate={navigate} /> : page === 'history' ? <History /> : page === 'pricing' ? <Pricing navigate={navigate} /> : page === 'login' ? <Login navigate={navigate} /> : page === 'privacy' ? <Privacy /> : page === 'refund' ? <Refund /> : page === 'contact' ? <Contact /> : page === 'shipping' ? <Shipping /> : page === 'terms' ? <Terms /> : page === 'website' ? <WebsiteLink /> : <Home navigate={navigate} />}
-      {page !== 'workspace' && page !== 'history' && page !== 'login' && <Footer navigate={navigate} navigateToSection={navigateToSection} />}
+      <Footer navigate={navigate} navigateToSection={navigateToSection} />
     </div>
   );
 }
