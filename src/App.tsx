@@ -25,11 +25,19 @@ import {
   Zap,
 } from 'lucide-react';
 
+import RazorpayCheckout from './RazorpayCheckout';
+import Privacy from './Privacy';
+import Refund from './Refund';
+import Contact from './Contact';
+import Shipping from './Shipping';
+import Terms from './Terms';
+import WebsiteLink from './WebsiteLink';
+
 const logoSrc = '/ChatGPT Image Aug 24, 2026, 03_40_08 PM.png';
 const maxFileSize = 10 * 1024 * 1024;
 const acceptedTypes = ['image/jpeg', 'image/png', 'image/webp'];
 
-type Page = 'home' | 'workspace' | 'history' | 'pricing' | 'login';
+type Page = 'home' | 'workspace' | 'history' | 'pricing' | 'login' | 'privacy' | 'refund' | 'contact' | 'shipping' | 'terms' | 'website';
 type UploadState = 'empty' | 'selected' | 'processing' | 'result';
 type HistoryItem = { id: string; filename: string; createdAt: string; url: string };
 const historyStorageKey = 'snapcut-history';
@@ -79,7 +87,20 @@ function App() {
   });
 
   const navigate = (nextPage: Page) => {
-    const path = nextPage === 'home' ? '/' : `/${nextPage === 'workspace' ? 'remove-background' : nextPage}`;
+    const pathMap: Record<Page, string> = {
+      home: '/',
+      workspace: '/remove-background',
+      history: '/history',
+      pricing: '/pricing',
+      login: '/login',
+      privacy: '/privacy',
+      refund: '/refund',
+      contact: '/contact',
+      shipping: '/shipping',
+      terms: '/terms',
+      website: '/website',
+    };
+    const path = pathMap[nextPage];
     window.history.pushState({}, '', path);
     setPage(nextPage);
     setMobileOpen(false);
@@ -102,18 +123,41 @@ function App() {
   return (
     <div className={`${darkMode ? 'dark' : ''} min-h-screen bg-[#f8faff] text-[#101a3a]`}>
       <Navbar page={page} navigate={navigate} navigateToSection={navigateToSection} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
-      {page === 'workspace' ? <Workspace navigate={navigate} /> : page === 'history' ? <History /> : page === 'pricing' ? <Pricing navigate={navigate} /> : page === 'login' ? <Login navigate={navigate} /> : <Home navigate={navigate} />}
+      {page === 'workspace' ? <Workspace navigate={navigate} /> : page === 'history' ? <History /> : page === 'pricing' ? <Pricing navigate={navigate} /> : page === 'login' ? <Login navigate={navigate} /> : page === 'privacy' ? <Privacy /> : page === 'refund' ? <Refund /> : page === 'contact' ? <Contact /> : page === 'shipping' ? <Shipping /> : page === 'terms' ? <Terms /> : page === 'website' ? <WebsiteLink /> : <Home navigate={navigate} />}
       {page !== 'workspace' && page !== 'history' && page !== 'login' && <Footer navigate={navigate} navigateToSection={navigateToSection} />}
     </div>
   );
 }
 
 function getPageFromPath(): Page {
-  if (window.location.pathname === '/remove-background') return 'workspace';
-  if (window.location.pathname === '/history') return 'history';
-  if (window.location.pathname === '/pricing') return 'pricing';
-  if (window.location.pathname === '/login') return 'login';
-  return 'home';
+  const p = window.location.pathname.replace(/\/$/, ''); // trim trailing slash
+  switch (p) {
+    case '':
+    case '/':
+      return 'home';
+    case '/remove-background':
+      return 'workspace';
+    case '/history':
+      return 'history';
+    case '/pricing':
+      return 'pricing';
+    case '/login':
+      return 'login';
+    case '/privacy':
+      return 'privacy';
+    case '/refund':
+      return 'refund';
+    case '/contact':
+      return 'contact';
+    case '/shipping':
+      return 'shipping';
+    case '/terms':
+      return 'terms';
+    case '/website':
+      return 'website';
+    default:
+      return 'home';
+  }
 }
 
 function Navbar({ page, navigate, navigateToSection, mobileOpen, setMobileOpen, darkMode, toggleDarkMode }: { page: Page; navigate: (page: Page) => void; navigateToSection: (section: string) => void; mobileOpen: boolean; setMobileOpen: (open: boolean) => void; darkMode: boolean; toggleDarkMode: () => void }) {
@@ -229,7 +273,7 @@ function History() {
   const clearHistory = () => { localStorage.removeItem(historyStorageKey); setItems([]); };
   return <main className="workspace-bg min-h-[calc(100vh-76px)]"><div className="mx-auto max-w-6xl px-5 py-12 sm:px-8 lg:py-16"><div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end"><div><div className="eyebrow"><HistoryIcon size={14} /> Local history</div><h1 className="mt-5 text-4xl font-extrabold tracking-[-.04em] sm:text-5xl">Your cutouts.</h1><p className="mt-4 text-base leading-7 text-[#6b748d]">Every background removal stays available on this device.</p></div>{items.length > 0 && <button className="button-secondary self-start sm:self-auto" onClick={clearHistory}>Clear history</button>}</div>{error && <p role="alert" className="mt-5 text-sm font-semibold text-[#b4234d]">{error}</p>}{items.length === 0 ? <div className="workspace-card mt-10 flex min-h-[300px] flex-col items-center justify-center p-8 text-center"><div className="upload-icon"><HistoryIcon size={25} /></div><h2 className="mt-6 text-xl font-bold">No processed images yet</h2><p className="mt-2 text-sm text-[#707a94]">Your completed background removals will appear here.</p></div> : <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{items.map(item => <article className="workspace-card overflow-hidden" key={item.id}><div className="result-pane checkerboard min-h-[250px] rounded-none"><img src={item.url} alt={`Processed ${item.filename}`} className="result-cutout max-h-[250px]" /></div><div className="p-4"><p className="truncate text-sm font-bold" title={item.filename}>{item.filename}</p><p className="mt-1 text-xs text-[#7c859d]">{new Date(item.createdAt).toLocaleString()}</p><button className="button-primary mt-4 w-full" onClick={() => downloadImage(item.url)}>Download PNG <Download size={16} /></button></div></article>)}</div>}</div></main> }
 
-function Pricing({ navigate }: { navigate: (page: Page) => void }) { return <main className="mx-auto max-w-7xl px-5 py-16 sm:px-8 lg:py-24"><div className="mx-auto max-w-2xl text-center"><p className="kicker">Simple plans</p><h1 className="section-heading mt-3">Start free. Scale when you need to.</h1><p className="mt-5 text-lg leading-8 text-[#69738f]">Choose the level of background removal that fits your workflow. Pricing can be configured for your market.</p></div><div className="mx-auto mt-14 grid max-w-5xl gap-5 lg:grid-cols-3">{[['Free','For trying the workflow',['3 removals per day','Standard processing','Transparent PNG']],['Pro','For creators and sellers',['Higher usage limits','Faster processing','Priority support']],['Business','For teams with volume',['Large usage limits','Priority processing','API-ready architecture']]].map(([name,desc,items], index) => <div className={`price-card ${index === 1 ? 'price-featured' : ''}`} key={name as string}>{index === 1 && <span className="popular-tag">Most flexible</span>}<p className="text-sm font-bold text-[#5b2dff]">{name}</p><h2 className="mt-5 text-2xl font-bold">{desc}</h2><div className="my-8 h-px bg-[#e7eaf2]" />{(items as string[]).map(item => <p className="mb-4 flex items-center gap-3 text-sm text-[#606a84]" key={item}><Check size={16} className="text-[#16a4a2]" />{item}</p>)}<button className={index === 1 ? 'button-primary mt-8 w-full' : 'button-secondary mt-8 w-full'} onClick={() => navigate('workspace')}>{index === 0 ? 'Try for free' : 'Get started'} <ArrowRight size={16} /></button></div>)}</div><p className="mt-8 text-center text-sm text-[#8a93a8]">No fake discounts. Payment options will be available when billing is connected.</p></main> }
+function Pricing({ navigate }: { navigate: (page: Page) => void }) { return <main className="mx-auto max-w-7xl px-5 py-16 sm:px-8 lg:py-24"><div className="mx-auto max-w-2xl text-center"><p className="kicker">Simple plans</p><h1 className="section-heading mt-3">Start free. Scale when you need to.</h1><p className="mt-5 text-lg leading-8 text-[#69738f]">Choose the level of background removal that fits your workflow. Pricing can be configured for your market.</p></div><div className="mx-auto mt-14 grid max-w-5xl gap-5 lg:grid-cols-3">{[['Free','For trying the workflow',['3 removals per day','Standard processing','Transparent PNG']],['Pro','For creators and sellers',['Higher usage limits','Faster processing','Priority support']],['Business','For teams with volume',['Large usage limits','Priority processing','API-ready architecture']]].map(([name,desc,items], index) => <div className={`price-card ${index === 1 ? 'price-featured' : ''}`} key={name as string}>{index === 1 && <span className="popular-tag">Most flexible</span>}<p className="text-sm font-bold text-[#5b2dff]">{name}</p><h2 className="mt-5 text-2xl font-bold">{desc}</h2><div className="my-8 h-px bg-[#e7eaf2]" />{(items as string[]).map(item => <p className="mb-4 flex items-center gap-3 text-sm text-[#606a84]" key={item}><Check size={16} className="text-[#16a4a2]" />{item}</p>)}{index === 0 ? (<button className={'button-secondary mt-8 w-full'} onClick={() => navigate('workspace')}>Try for free <ArrowRight size={16} /></button>) : index === 1 ? (<div className="mt-8 w-full"><RazorpayCheckout amount={4.99} name="SnapCut AI — Pro" description="Pro plan subscription" createOrderEndpoint={import.meta.env.VITE_CREATE_ORDER_ENDPOINT} onSuccess={(res) => { console.log('Payment success', res); alert('Payment successful'); }} onError={(err) => { console.error(err); alert('Payment failed'); }} /></div>) : (<div className="mt-8 w-full"><RazorpayCheckout amount={29.99} name="SnapCut AI — Business" description="Business plan subscription" createOrderEndpoint={import.meta.env.VITE_CREATE_ORDER_ENDPOINT} onSuccess={(res) => { console.log('Payment success', res); alert('Payment successful'); }} onError={(err) => { console.error(err); alert('Payment failed'); }} /></div>)}</div>)}</div><p className="mt-8 text-center text-sm text-[#8a93a8]">No fake discounts. Payment options will be available when billing is connected.</p></main> }
 
 function Login({ navigate }: { navigate: (page: Page) => void }) {
   const [email, setEmail] = useState('');
@@ -250,7 +294,7 @@ function Login({ navigate }: { navigate: (page: Page) => void }) {
   return <main className="flex min-h-[calc(100vh-76px)] items-center justify-center px-5 py-12"><div className="auth-card"><div className="mx-auto flex h-14 w-24 items-center overflow-hidden"><img src={logoSrc} alt="SnapCut AI" className="h-20 w-full object-contain" /></div><h1 className="mt-7 text-center text-2xl font-bold">{mode === 'login' ? 'Welcome back' : 'Create your account'}</h1><p className="mt-2 text-center text-sm text-[#6f7891]">{mode === 'login' ? 'Sign in to keep your workspace and usage together.' : 'Start with a free workspace and three daily removals.'}</p><form className="mt-8 space-y-4" onSubmit={submit}><label className="field-label">Email<input className="field-input" value={email} onChange={(event) => setEmail(event.target.value)} type="email" placeholder="you@example.com" required /></label><label className="field-label">Password<input className="field-input" value={password} onChange={(event) => setPassword(event.target.value)} type="password" placeholder="At least 6 characters" minLength={6} required /></label>{message && <p role="alert" className="rounded-lg bg-[#fff5f7] px-3 py-2 text-sm text-[#b4234d]">{message}</p>}<button className="button-primary w-full py-3.5" type="submit" disabled={busy}>{busy ? 'Please wait...' : mode === 'login' ? 'Log in' : 'Create account'} {!busy && <ArrowRight size={17} />}</button></form><p className="mt-7 text-center text-sm text-[#747d94]">{mode === 'login' ? 'New to SnapCut?' : 'Already have an account?'} <button className="font-bold text-[#5b2dff]" onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}>{mode === 'login' ? 'Create an account' : 'Log in'}</button></p><button className="mt-4 block w-full text-center text-sm font-semibold text-[#747d94] hover:text-[#5b2dff]" onClick={() => navigate('workspace')}>Continue without an account</button></div></main>
 }
 
-function Footer({ navigate, navigateToSection }: { navigate: (page: Page) => void; navigateToSection: (section: string) => void }) { return <footer className="border-t border-[#e5e7f2] bg-white"><div className="mx-auto flex max-w-7xl flex-col gap-8 px-5 py-10 sm:px-8 md:flex-row md:items-end md:justify-between"><div><button onClick={() => navigate('home')} className="flex h-12 w-32 items-center overflow-hidden"><img src={logoSrc} alt="SnapCut AI" className="h-20 w-full object-contain" /></button><p className="mt-3 max-w-xs text-sm leading-6 text-[#7b849b]">One focused tool for clean, confident image cutouts.</p></div><div className="flex flex-wrap gap-x-7 gap-y-3 text-sm font-semibold text-[#69738f]"><button onClick={() => navigate('workspace')}>Remove background</button><button onClick={() => navigate('pricing')}>Pricing</button><button onClick={() => navigateToSection('faq')}>FAQ</button><button onClick={() => navigateToSection('features')}>Features</button></div><p className="text-xs text-[#9aa2b3]">© 2026 SnapCut AI</p></div></footer> }
+function Footer({ navigate, navigateToSection }: { navigate: (page: Page) => void; navigateToSection: (section: string) => void }) { return <footer className="border-t border-[#e5e7f2] bg-white"><div className="mx-auto flex max-w-7xl flex-col gap-8 px-5 py-10 sm:px-8 md:flex-row md:items-end md:justify-between"><div><button onClick={() => navigate('home')} className="flex h-12 w-32 items-center overflow-hidden"><img src={logoSrc} alt="SnapCut AI" className="h-20 w-full object-contain" /></button><p className="mt-3 max-w-xs text-sm leading-6 text-[#7b849b]">One focused tool for clean, confident image cutouts.</p></div><div className="flex flex-wrap gap-x-7 gap-y-3 text-sm font-semibold text-[#69738f]"><button onClick={() => navigate('workspace')}>Remove background</button><button onClick={() => navigate('pricing')}>Pricing</button><button onClick={() => navigate('privacy')}>Privacy</button><button onClick={() => navigate('refund')}>Refund & Cancellation</button><button onClick={() => navigate('contact')}>Contact</button><button onClick={() => navigate('shipping')}>Shipping & Delivery</button><button onClick={() => navigate('terms')}>Terms</button><button onClick={() => navigateToSection('faq')}>FAQ</button><button onClick={() => navigateToSection('features')}>Features</button></div><p className="text-xs text-[#9aa2b3]">© 2026 SnapCut AI</p></div></footer> }
 
 function formatBytes(bytes: number) { if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`; return `${(bytes / (1024 * 1024)).toFixed(1)} MB`; }
 
