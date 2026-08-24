@@ -39,12 +39,23 @@ const acceptedTypes = ['image/jpeg', 'image/png', 'image/webp'];
 
 type Page = 'home' | 'workspace' | 'history' | 'pricing' | 'login' | 'privacy' | 'refund' | 'contact' | 'shipping' | 'terms' | 'website';
 type UploadState = 'empty' | 'selected' | 'processing' | 'result';
+type PlanName = 'free' | 'pro' | 'business';
 type HistoryItem = { id: string; filename: string; createdAt: string; url: string };
 const historyStorageKey = 'snapcut-history';
+const planStorageKey = 'snapcut-plan';
 let currentOriginalPreview = '';
 
 function getHistory(): HistoryItem[] {
   try { return JSON.parse(localStorage.getItem(historyStorageKey) || '[]') as HistoryItem[]; } catch { return []; }
+}
+
+function getPlan(): PlanName {
+  const storedPlan = localStorage.getItem(planStorageKey) as PlanName | null;
+  return storedPlan === 'pro' || storedPlan === 'business' ? storedPlan : 'free';
+}
+
+function setPlan(plan: PlanName) {
+  localStorage.setItem(planStorageKey, plan);
 }
 
 function addHistoryItem(item: HistoryItem) {
@@ -273,7 +284,21 @@ function History() {
   const clearHistory = () => { localStorage.removeItem(historyStorageKey); setItems([]); };
   return <main className="workspace-bg min-h-[calc(100vh-76px)]"><div className="mx-auto max-w-6xl px-5 py-12 sm:px-8 lg:py-16"><div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end"><div><div className="eyebrow"><HistoryIcon size={14} /> Local history</div><h1 className="mt-5 text-4xl font-extrabold tracking-[-.04em] sm:text-5xl">Your cutouts.</h1><p className="mt-4 text-base leading-7 text-[#6b748d]">Every background removal stays available on this device.</p></div>{items.length > 0 && <button className="button-secondary self-start sm:self-auto" onClick={clearHistory}>Clear history</button>}</div>{error && <p role="alert" className="mt-5 text-sm font-semibold text-[#b4234d]">{error}</p>}{items.length === 0 ? <div className="workspace-card mt-10 flex min-h-[300px] flex-col items-center justify-center p-8 text-center"><div className="upload-icon"><HistoryIcon size={25} /></div><h2 className="mt-6 text-xl font-bold">No processed images yet</h2><p className="mt-2 text-sm text-[#707a94]">Your completed background removals will appear here.</p></div> : <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{items.map(item => <article className="workspace-card overflow-hidden" key={item.id}><div className="result-pane checkerboard min-h-[250px] rounded-none"><img src={item.url} alt={`Processed ${item.filename}`} className="result-cutout max-h-[250px]" /></div><div className="p-4"><p className="truncate text-sm font-bold" title={item.filename}>{item.filename}</p><p className="mt-1 text-xs text-[#7c859d]">{new Date(item.createdAt).toLocaleString()}</p><button className="button-primary mt-4 w-full" onClick={() => downloadImage(item.url)}>Download PNG <Download size={16} /></button></div></article>)}</div>}</div></main> }
 
-function Pricing({ navigate }: { navigate: (page: Page) => void }) { return <main className="mx-auto max-w-7xl px-5 py-16 sm:px-8 lg:py-24"><div className="mx-auto max-w-2xl text-center"><p className="kicker">Simple plans</p><h1 className="section-heading mt-3">Start free. Scale when you need to.</h1><p className="mt-5 text-lg leading-8 text-[#69738f]">Choose the level of background removal that fits your workflow. Pricing can be configured for your market.</p></div><div className="mx-auto mt-14 grid max-w-5xl gap-5 lg:grid-cols-3">{[['Free','For trying the workflow',['3 removals per day','Standard processing','Transparent PNG']],['Pro','For creators and sellers',['Higher usage limits','Faster processing','Priority support']],['Business','For teams with volume',['Large usage limits','Priority processing','API-ready architecture']]].map(([name,desc,items], index) => <div className={`price-card ${index === 1 ? 'price-featured' : ''}`} key={name as string}>{index === 1 && <span className="popular-tag">Most flexible</span>}<p className="text-sm font-bold text-[#5b2dff]">{name}</p><h2 className="mt-5 text-2xl font-bold">{desc}</h2><div className="my-8 h-px bg-[#e7eaf2]" />{(items as string[]).map(item => <p className="mb-4 flex items-center gap-3 text-sm text-[#606a84]" key={item}><Check size={16} className="text-[#16a4a2]" />{item}</p>)}{index === 0 ? (<button className={'button-secondary mt-8 w-full'} onClick={() => navigate('workspace')}>Try for free <ArrowRight size={16} /></button>) : index === 1 ? (<div className="mt-8 w-full"><RazorpayCheckout amount={4.99} name="SnapCut AI — Pro" description="Pro plan subscription" createOrderEndpoint={import.meta.env.VITE_CREATE_ORDER_ENDPOINT} onSuccess={(res) => { console.log('Payment success', res); alert('Payment successful'); }} onError={(err) => { console.error(err); alert('Payment failed'); }} /></div>) : (<div className="mt-8 w-full"><RazorpayCheckout amount={29.99} name="SnapCut AI — Business" description="Business plan subscription" createOrderEndpoint={import.meta.env.VITE_CREATE_ORDER_ENDPOINT} onSuccess={(res) => { console.log('Payment success', res); alert('Payment successful'); }} onError={(err) => { console.error(err); alert('Payment failed'); }} /></div>)}</div>)}</div><p className="mt-8 text-center text-sm text-[#8a93a8]">No fake discounts. Payment options will be available when billing is connected.</p></main> }
+function Pricing({ navigate }: { navigate: (page: Page) => void }) {
+  const [activePlan, setActivePlan] = useState<PlanName>(() => getPlan());
+
+  const handlePaymentSuccess = (plan: 'pro' | 'business') => (response: any) => {
+    console.log('Payment success', response);
+    setPlan(plan);
+    setActivePlan(plan);
+    alert(`${plan === 'pro' ? 'Pro' : 'Business'} plan activated successfully.`);
+  };
+
+  return <main className="mx-auto max-w-7xl px-5 py-16 sm:px-8 lg:py-24"><div className="mx-auto max-w-2xl text-center"><p className="kicker">Simple plans</p><h1 className="section-heading mt-3">Start free. Scale when you need to.</h1><p className="mt-5 text-lg leading-8 text-[#69738f]">Choose the level of background removal that fits your workflow. Pricing can be configured for your market.</p></div><div className="mx-auto mt-14 grid max-w-5xl gap-5 lg:grid-cols-3">{[['Free','For trying the workflow',['3 removals per day','Standard processing','Transparent PNG'],'free'],['Pro','For creators and sellers',['Higher usage limits','Faster processing','Priority support'],'pro'],['Business','For teams with volume',['Large usage limits','Priority processing','API-ready architecture'],'business']].map(([name,desc,items,planKey], index) => {
+    const plan = planKey as PlanName;
+    const isCurrentPlan = activePlan === plan && plan !== 'free';
+    return <div className={`price-card ${index === 1 ? 'price-featured' : ''}`} key={name as string}>{index === 1 && <span className="popular-tag">Most flexible</span>}<p className="text-sm font-bold text-[#5b2dff]">{name}</p><h2 className="mt-5 text-2xl font-bold">{desc}</h2><div className="my-8 h-px bg-[#e7eaf2]" />{(items as string[]).map(item => <p className="mb-4 flex items-center gap-3 text-sm text-[#606a84]" key={item}><Check size={16} className="text-[#16a4a2]" />{item}</p>)}{plan === 'free' ? (<button className={'button-secondary mt-8 w-full'} onClick={() => navigate('workspace')}>Try for free <ArrowRight size={16} /></button>) : isCurrentPlan ? (<button className={'button-primary mt-8 w-full'} disabled>Current plan</button>) : (<div className="mt-8 w-full"><RazorpayCheckout amount={plan === 'pro' ? 4.99 : 29.99} name={plan === 'pro' ? 'SnapCut AI — Pro' : 'SnapCut AI — Business'} description={plan === 'pro' ? 'Pro plan subscription' : 'Business plan subscription'} createOrderEndpoint={import.meta.env.VITE_CREATE_ORDER_ENDPOINT} onSuccess={handlePaymentSuccess(plan)} onError={(err) => { console.error(err); alert('Payment failed'); }} /></div>)}</div>;
+  })}</div><p className="mt-8 text-center text-sm text-[#8a93a8]">No fake discounts. Payment options will be available when billing is connected.</p></main> }
 
 function Login({ navigate }: { navigate: (page: Page) => void }) {
   const [email, setEmail] = useState('');

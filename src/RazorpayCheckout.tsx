@@ -13,6 +13,20 @@ type RazorpayCheckoutProps = {
   onError?: (err: any) => void;
 };
 
+const DEV_RAZORPAY_KEY = 'rzp_test_TTbcOSn72HCvBG';
+
+function resolveRazorpayKey(): string | undefined {
+  const configuredKey = import.meta.env.VITE_RAZORPAY_KEY;
+  if (configuredKey && configuredKey.trim()) return configuredKey.trim();
+
+  if (import.meta.env.DEV) {
+    console.warn('VITE_RAZORPAY_KEY not configured. Using the bundled local test key for development only.');
+    return DEV_RAZORPAY_KEY;
+  }
+
+  return undefined;
+}
+
 // Loads the Razorpay checkout script and returns a promise that resolves when loaded
 function loadRazorpayScript(): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -44,7 +58,7 @@ export default function RazorpayCheckout({ amount, currency = 'INR', name = 'Sna
       return;
     }
 
-    const key = import.meta.env.VITE_RAZORPAY_KEY as string | undefined;
+    const key = resolveRazorpayKey();
     if (!key) {
       const err = new Error('Razorpay key not configured. Set VITE_RAZORPAY_KEY in your environment.');
       onError?.(err);
@@ -54,11 +68,12 @@ export default function RazorpayCheckout({ amount, currency = 'INR', name = 'Sna
 
     // Razorpay expects amount in smallest currency unit (paise for INR)
     const amountPaise = Math.round(amount * 100);
+    const orderEndpoint = createOrderEndpoint || (import.meta.env.DEV ? '/api/create-order' : undefined);
 
     let orderId: string | undefined;
-    if (createOrderEndpoint) {
+    if (orderEndpoint) {
       try {
-        const res = await fetch(createOrderEndpoint, {
+        const res = await fetch(orderEndpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ amount: amountPaise, currency }),
