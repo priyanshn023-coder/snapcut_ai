@@ -86,6 +86,13 @@ function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const navigateToSection = (section: string) => {
+    window.history.pushState({}, '', `/#${section}`);
+    setPage('home');
+    setMobileOpen(false);
+    window.setTimeout(() => document.getElementById(section)?.scrollIntoView({ behavior: 'smooth' }), 0);
+  };
+
   useMemo(() => {
     const onPopState = () => setPage(getPageFromPath());
     window.addEventListener('popstate', onPopState);
@@ -94,9 +101,9 @@ function App() {
 
   return (
     <div className={`${darkMode ? 'dark' : ''} min-h-screen bg-[#f8faff] text-[#101a3a]`}>
-      <Navbar page={page} navigate={navigate} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
+      <Navbar page={page} navigate={navigate} navigateToSection={navigateToSection} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
       {page === 'workspace' ? <Workspace navigate={navigate} /> : page === 'history' ? <History /> : page === 'pricing' ? <Pricing navigate={navigate} /> : page === 'login' ? <Login navigate={navigate} /> : <Home navigate={navigate} />}
-      {page !== 'workspace' && page !== 'history' && page !== 'login' && <Footer navigate={navigate} />}
+      {page !== 'workspace' && page !== 'history' && page !== 'login' && <Footer navigate={navigate} navigateToSection={navigateToSection} />}
     </div>
   );
 }
@@ -109,7 +116,7 @@ function getPageFromPath(): Page {
   return 'home';
 }
 
-function Navbar({ page, navigate, mobileOpen, setMobileOpen, darkMode, toggleDarkMode }: { page: Page; navigate: (page: Page) => void; mobileOpen: boolean; setMobileOpen: (open: boolean) => void; darkMode: boolean; toggleDarkMode: () => void }) {
+function Navbar({ page, navigate, navigateToSection, mobileOpen, setMobileOpen, darkMode, toggleDarkMode }: { page: Page; navigate: (page: Page) => void; navigateToSection: (section: string) => void; mobileOpen: boolean; setMobileOpen: (open: boolean) => void; darkMode: boolean; toggleDarkMode: () => void }) {
   return (
     <header className="sticky top-0 z-50 border-b border-[#e5e7f2]/80 bg-[#f8faff]/90 backdrop-blur-xl">
       <div className="mx-auto flex h-[76px] max-w-7xl items-center justify-between px-5 sm:px-8">
@@ -117,11 +124,11 @@ function Navbar({ page, navigate, mobileOpen, setMobileOpen, darkMode, toggleDar
           <img src={logoSrc} alt="SnapCut AI" className="h-[92px] w-full object-contain" />
         </button>
         <nav className="hidden items-center gap-8 lg:flex">
-          <a href="#how-it-works" className="nav-link">How it works</a>
-          <a href="#features" className="nav-link">Features</a>
+          <button className="nav-link" onClick={() => navigateToSection('how-it-works')}>How it works</button>
+          <button className="nav-link" onClick={() => navigateToSection('features')}>Features</button>
           <button className={`nav-link ${page === 'pricing' ? 'text-[#5b2dff]' : ''}`} onClick={() => navigate('pricing')}>Pricing</button>
           <button className={`nav-link flex items-center gap-1.5 ${page === 'history' ? 'text-[#5b2dff]' : ''}`} onClick={() => navigate('history')}><HistoryIcon size={15} /> History</button>
-          <a href="#faq" className="nav-link">FAQ</a>
+          <button className="nav-link" onClick={() => navigateToSection('faq')}>FAQ</button>
         </nav>
         <div className="hidden items-center gap-3 lg:flex">
           <button aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'} title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'} onClick={toggleDarkMode} className="theme-toggle">{darkMode ? <Sun size={17} /> : <Moon size={17} />}</button>
@@ -135,11 +142,11 @@ function Navbar({ page, navigate, mobileOpen, setMobileOpen, darkMode, toggleDar
       {mobileOpen && (
         <div className="border-t border-[#e5e7f2] bg-white px-5 py-5 lg:hidden">
           <div className="flex flex-col gap-4 text-sm font-semibold">
-            <a href="#how-it-works" onClick={() => setMobileOpen(false)}>How it works</a>
-            <a href="#features" onClick={() => setMobileOpen(false)}>Features</a>
+            <button className="text-left" onClick={() => navigateToSection('how-it-works')}>How it works</button>
+            <button className="text-left" onClick={() => navigateToSection('features')}>Features</button>
             <button className="text-left" onClick={() => navigate('pricing')}>Pricing</button>
             <button className="flex items-center gap-2 text-left" onClick={() => navigate('history')}><HistoryIcon size={16} /> History</button>
-            <a href="#faq" onClick={() => setMobileOpen(false)}>FAQ</a>
+            <button className="text-left" onClick={() => navigateToSection('faq')}>FAQ</button>
             <div className="flex items-center gap-3 border-t border-[#e5e7f2] pt-4"><button aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'} title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'} onClick={toggleDarkMode} className="theme-toggle">{darkMode ? <Sun size={17} /> : <Moon size={17} />}</button><button className="button-ghost" onClick={() => navigate('login')}>Log in</button><button className="button-primary flex-1" onClick={() => navigate('workspace')}>Get started <ArrowRight size={16} /></button></div>
           </div>
         </div>
@@ -243,7 +250,7 @@ function Login({ navigate }: { navigate: (page: Page) => void }) {
   return <main className="flex min-h-[calc(100vh-76px)] items-center justify-center px-5 py-12"><div className="auth-card"><div className="mx-auto flex h-14 w-24 items-center overflow-hidden"><img src={logoSrc} alt="SnapCut AI" className="h-20 w-full object-contain" /></div><h1 className="mt-7 text-center text-2xl font-bold">{mode === 'login' ? 'Welcome back' : 'Create your account'}</h1><p className="mt-2 text-center text-sm text-[#6f7891]">{mode === 'login' ? 'Sign in to keep your workspace and usage together.' : 'Start with a free workspace and three daily removals.'}</p><form className="mt-8 space-y-4" onSubmit={submit}><label className="field-label">Email<input className="field-input" value={email} onChange={(event) => setEmail(event.target.value)} type="email" placeholder="you@example.com" required /></label><label className="field-label">Password<input className="field-input" value={password} onChange={(event) => setPassword(event.target.value)} type="password" placeholder="At least 6 characters" minLength={6} required /></label>{message && <p role="alert" className="rounded-lg bg-[#fff5f7] px-3 py-2 text-sm text-[#b4234d]">{message}</p>}<button className="button-primary w-full py-3.5" type="submit" disabled={busy}>{busy ? 'Please wait...' : mode === 'login' ? 'Log in' : 'Create account'} {!busy && <ArrowRight size={17} />}</button></form><p className="mt-7 text-center text-sm text-[#747d94]">{mode === 'login' ? 'New to SnapCut?' : 'Already have an account?'} <button className="font-bold text-[#5b2dff]" onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}>{mode === 'login' ? 'Create an account' : 'Log in'}</button></p><button className="mt-4 block w-full text-center text-sm font-semibold text-[#747d94] hover:text-[#5b2dff]" onClick={() => navigate('workspace')}>Continue without an account</button></div></main>
 }
 
-function Footer({ navigate }: { navigate: (page: Page) => void }) { return <footer className="border-t border-[#e5e7f2] bg-white"><div className="mx-auto flex max-w-7xl flex-col gap-8 px-5 py-10 sm:px-8 md:flex-row md:items-end md:justify-between"><div><button onClick={() => navigate('home')} className="flex h-12 w-32 items-center overflow-hidden"><img src={logoSrc} alt="SnapCut AI" className="h-20 w-full object-contain" /></button><p className="mt-3 max-w-xs text-sm leading-6 text-[#7b849b]">One focused tool for clean, confident image cutouts.</p></div><div className="flex flex-wrap gap-x-7 gap-y-3 text-sm font-semibold text-[#69738f]"><button onClick={() => navigate('workspace')}>Remove background</button><button onClick={() => navigate('pricing')}>Pricing</button><a href="#faq">FAQ</a><a href="#features">Features</a></div><p className="text-xs text-[#9aa2b3]">© 2026 SnapCut AI</p></div></footer> }
+function Footer({ navigate, navigateToSection }: { navigate: (page: Page) => void; navigateToSection: (section: string) => void }) { return <footer className="border-t border-[#e5e7f2] bg-white"><div className="mx-auto flex max-w-7xl flex-col gap-8 px-5 py-10 sm:px-8 md:flex-row md:items-end md:justify-between"><div><button onClick={() => navigate('home')} className="flex h-12 w-32 items-center overflow-hidden"><img src={logoSrc} alt="SnapCut AI" className="h-20 w-full object-contain" /></button><p className="mt-3 max-w-xs text-sm leading-6 text-[#7b849b]">One focused tool for clean, confident image cutouts.</p></div><div className="flex flex-wrap gap-x-7 gap-y-3 text-sm font-semibold text-[#69738f]"><button onClick={() => navigate('workspace')}>Remove background</button><button onClick={() => navigate('pricing')}>Pricing</button><button onClick={() => navigateToSection('faq')}>FAQ</button><button onClick={() => navigateToSection('features')}>Features</button></div><p className="text-xs text-[#9aa2b3]">© 2026 SnapCut AI</p></div></footer> }
 
 function formatBytes(bytes: number) { if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`; return `${(bytes / (1024 * 1024)).toFixed(1)} MB`; }
 

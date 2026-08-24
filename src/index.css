@@ -80,7 +80,7 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 .dark .theme-toggle:hover { background: #293957; }
 .dark .upload-zone { border-color: #7969d2; }
 .dark .preview-frame, .dark .result-pane { background-color: #202c43; }
-.dark .checkerboard { background-color: #202b3f; background-image: linear-gradient(45deg, #2b3950 25%, transparent 25%), linear-gradient(-45deg, #2b3950 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #2b3950 75%), linear-gradient(-45deg, transparent 75%, #2b3950 75%); }
+.dark .checkerboard { background-color: #151f35; background-image: none; }
 .dark .feature-card:hover, .dark .step-card:hover, .dark .use-case:hover { box-shadow: 0 15px 34px rgba(0,0,0,.25); }
 .dark .field-input { border-color: #344361; background: #101a2d; color: #e8edf7; }
 .dark .border-t, .dark .border-b { border-color: #2b3954; }
