@@ -25,7 +25,7 @@ import {
   Zap,
 } from 'lucide-react';
 
-const logoSrc = '/ChatGPT_Image_Aug_22,_2026,_12_13_14_PM.png';
+const logoSrc = '/ChatGPT Image Aug 24, 2026, 03_40_08 PM.png';
 const maxFileSize = 10 * 1024 * 1024;
 const acceptedTypes = ['image/jpeg', 'image/png', 'image/webp'];
 
