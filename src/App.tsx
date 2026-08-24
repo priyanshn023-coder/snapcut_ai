@@ -18,6 +18,8 @@ import {
   RotateCcw,
   Scissors,
   Sparkles,
+  Moon,
+  Sun,
   Upload,
   X,
   Zap,
@@ -68,6 +70,13 @@ const faqs = [
 function App() {
   const [page, setPage] = useState<Page>(() => getPageFromPath());
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [darkMode, setDarkMode] = useState(() => localStorage.getItem('snapcut-theme') === 'dark');
+
+  const toggleDarkMode = () => setDarkMode((enabled) => {
+    const nextValue = !enabled;
+    localStorage.setItem('snapcut-theme', nextValue ? 'dark' : 'light');
+    return nextValue;
+  });
 
   const navigate = (nextPage: Page) => {
     const path = nextPage === 'home' ? '/' : `/${nextPage === 'workspace' ? 'remove-background' : nextPage}`;
@@ -84,8 +93,8 @@ function App() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#f8faff] text-[#101a3a]">
-      <Navbar page={page} navigate={navigate} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} />
+    <div className={`${darkMode ? 'dark' : ''} min-h-screen bg-[#f8faff] text-[#101a3a]`}>
+      <Navbar page={page} navigate={navigate} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
       {page === 'workspace' ? <Workspace navigate={navigate} /> : page === 'history' ? <History /> : page === 'pricing' ? <Pricing navigate={navigate} /> : page === 'login' ? <Login navigate={navigate} /> : <Home navigate={navigate} />}
       {page !== 'workspace' && page !== 'history' && page !== 'login' && <Footer navigate={navigate} />}
     </div>
@@ -100,7 +109,7 @@ function getPageFromPath(): Page {
   return 'home';
 }
 
-function Navbar({ page, navigate, mobileOpen, setMobileOpen }: { page: Page; navigate: (page: Page) => void; mobileOpen: boolean; setMobileOpen: (open: boolean) => void }) {
+function Navbar({ page, navigate, mobileOpen, setMobileOpen, darkMode, toggleDarkMode }: { page: Page; navigate: (page: Page) => void; mobileOpen: boolean; setMobileOpen: (open: boolean) => void; darkMode: boolean; toggleDarkMode: () => void }) {
   return (
     <header className="sticky top-0 z-50 border-b border-[#e5e7f2]/80 bg-[#f8faff]/90 backdrop-blur-xl">
       <div className="mx-auto flex h-[76px] max-w-7xl items-center justify-between px-5 sm:px-8">
@@ -115,6 +124,7 @@ function Navbar({ page, navigate, mobileOpen, setMobileOpen }: { page: Page; nav
           <a href="#faq" className="nav-link">FAQ</a>
         </nav>
         <div className="hidden items-center gap-3 lg:flex">
+          <button aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'} title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'} onClick={toggleDarkMode} className="theme-toggle">{darkMode ? <Sun size={17} /> : <Moon size={17} />}</button>
           <button className="button-ghost" onClick={() => navigate('login')}>Log in</button>
           <button className="button-primary px-5" onClick={() => navigate('workspace')}>Get started <ArrowRight size={16} /></button>
         </div>
@@ -130,7 +140,7 @@ function Navbar({ page, navigate, mobileOpen, setMobileOpen }: { page: Page; nav
             <button className="text-left" onClick={() => navigate('pricing')}>Pricing</button>
             <button className="flex items-center gap-2 text-left" onClick={() => navigate('history')}><HistoryIcon size={16} /> History</button>
             <a href="#faq" onClick={() => setMobileOpen(false)}>FAQ</a>
-            <div className="flex gap-3 border-t border-[#e5e7f2] pt-4"><button className="button-ghost" onClick={() => navigate('login')}>Log in</button><button className="button-primary flex-1" onClick={() => navigate('workspace')}>Get started <ArrowRight size={16} /></button></div>
+            <div className="flex items-center gap-3 border-t border-[#e5e7f2] pt-4"><button aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'} title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'} onClick={toggleDarkMode} className="theme-toggle">{darkMode ? <Sun size={17} /> : <Moon size={17} />}</button><button className="button-ghost" onClick={() => navigate('login')}>Log in</button><button className="button-primary flex-1" onClick={() => navigate('workspace')}>Get started <ArrowRight size={16} /></button></div>
           </div>
         </div>
       )}
